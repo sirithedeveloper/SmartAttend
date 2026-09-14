@@ -1,0 +1,833 @@
+
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Modern Sudoku</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            sudoku: {
+              bg: '#0f172a',
+              board: '#1e293b',
+              cell: '#334155',
+              selected: '#3b82f6',
+              highlight: '#1e3a8a',
+              related: '#1e293b',
+              same: '#1d4ed8',
+              given: '#f8fafc',
+              user: '#60a5fa',
+              error: '#ef4444',
+              errorbg: '#7f1d1d',
+              note: '#94a3b8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Prevent unwanted touch zooming and scrolling on mobile devices during play */
+    body {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Grid borders customization */
+    .grid-border-thick-r { border-right: 3px solid #64748b; }
+    .grid-border-thick-b { border-bottom: 3px solid #64748b; }
+
+    /* Transitions */
+    .cell-transition {
+      transition: background-color 0.15s ease, color 0.15s ease, transform 0.05s ease;
+    }
+
+    .cell-transition:active {
+      transform: scale(0.96);
+    }
+
+    /* Candidate notes 3x3 layout within a single cell */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Keypad button ripple feedback */
+    .btn-press {
+      transition: transform 0.1s ease, background-color 0.15s ease;
+    }
+    .btn-press:active {
+      transform: scale(0.92);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between items-center bg-slate-900 font-sans p-2 sm:p-4 text-slate-100 max-w-md md:max-w-xl lg:max-w-2xl mx-auto">
+
+  <header class="w-full flex items-center justify-between py-2 border-b border-slate-800 mb-2">
+    <div class="flex items-center gap-2">
+      <div class="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+        </svg>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+        Sudoku Master
+      </h1>
+    </div>
+
+    <!-- Timer and Mistake Indicators -->
+    <div class="flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/50">
+      <div class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-rose-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="mistakes-count">0/3</span>
+      </div>
+      <div class="h-4 w-px bg-slate-700"></div>
+      <div class="flex items-center gap-1.5 text-xs sm:text-sm font-semibold font-mono text-slate-300">
+        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="timer-display">00:00</span>
+        <button id="pause-btn" class="ml-1 text-slate-400 hover:text-white transition">
+          <svg id="pause-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="w-full flex items-center justify-between gap-2 mb-2">
+    <div class="relative inline-block w-36">
+      <select id="difficulty-select" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+        <option value="expert">Expert</option>
+      </select>
+      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <button id="new-game-btn" class="btn-press bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-md transition flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        New Game
+      </button>
+      <button id="restart-btn" title="Restart Puzzle" class="btn-press bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl border border-slate-700 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <main class="w-full flex-grow flex flex-col items-center justify-center relative my-auto">
+    <!-- Grid Canvas Wrapper -->
+    <div id="board-container" class="w-full aspect-square max-w-[480px] bg-slate-800 rounded-2xl p-1.5 sm:p-2 border border-slate-700 shadow-2xl relative overflow-hidden">
+      <!-- Pause Overlay -->
+      <div id="pause-overlay" class="absolute inset-0 bg-slate-900/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 hidden">
+        <svg class="w-12 h-12 text-blue-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span class="text-lg font-bold text-slate-200">Game Paused</span>
+        <button id="resume-btn" class="btn-press bg-blue-600 text-white px-6 py-2 rounded-xl font-semibold text-sm shadow-lg">Resume</button>
+      </div>
+
+      <!-- 9x9 Sudoku Grid -->
+      <div id="sudoku-grid" class="w-full h-full grid grid-cols-9 grid-rows-9 gap-[1px] bg-slate-700 rounded-xl overflow-hidden border border-slate-700">
+        <!-- Cells generated by JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Action Tools Bar (Undo, Erase, Notes, Hint) -->
+  <section class="w-full max-w-[480px] my-2">
+    <div class="grid grid-cols-4 gap-2">
+      <button id="undo-btn" class="btn-press flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 transition group">
+        <svg class="w-5 h-5 text-slate-300 group-hover:text-blue-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+        <span class="text-[10px] sm:text-xs font-medium text-slate-400">Undo</span>
+      </button>
+
+      <button id="erase-btn" class="btn-press flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 transition group">
+        <svg class="w-5 h-5 text-slate-300 group-hover:text-rose-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        <span class="text-[10px] sm:text-xs font-medium text-slate-400">Erase</span>
+      </button>
+
+      <button id="notes-toggle-btn" class="btn-press flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 transition relative group">
+        <div id="notes-indicator" class="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-slate-500"></div>
+        <svg class="w-5 h-5 text-slate-300 group-hover:text-amber-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+        <span class="text-[10px] sm:text-xs font-medium text-slate-400">Notes (N)</span>
+      </button>
+
+      <button id="hint-btn" class="btn-press flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 transition group">
+        <svg class="w-5 h-5 text-amber-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+        <span class="text-[10px] sm:text-xs font-medium text-slate-400">Hint</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Keypad (1-9) -->
+  <section class="w-full max-w-[480px] pb-2">
+    <div id="keypad" class="grid grid-cols-9 gap-1 sm:gap-1.5">
+      <!-- Buttons 1 through 9 populated by JS -->
+    </div>
+  </section>
+
+  <!-- Victory / Game Over Modal -->
+  <div id="modal-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl transform transition-all scale-95 opacity-0" id="modal-card">
+      <div id="modal-icon" class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      </div>
+
+      <h2 id="modal-title" class="text-2xl font-bold text-white mb-1">Puzzle Solved!</h2>
+      <p id="modal-subtitle" class="text-sm text-slate-400 mb-6">Excellent job! You completed the Sudoku.</p>
+
+      <div class="bg-slate-900/60 rounded-xl p-4 mb-6 border border-slate-700/50 space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Difficulty</span>
+          <span id="modal-diff" class="font-semibold text-slate-200 capitalize">Medium</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Time Taken</span>
+          <span id="modal-time" class="font-semibold text-slate-200 font-mono">04:25</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Best Time</span>
+          <span id="modal-best-time" class="font-semibold text-blue-400 font-mono">03:10</span>
+        </div>
+      </div>
+
+      <button id="modal-play-again" class="w-full btn-press bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg transition">
+        Play Again
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /*
+     * SUDOKU GAME ENGINE
+     * Implements Solver, Generator, State Management, Local Storage, UI Events.
+     */
+
+    // Game Configuration and Difficulty Givens
+    const DIFFICULTY_GIVENS = {
+      easy: 42,
+      medium: 34,
+      hard: 28,
+      expert: 24
+    };
+
+    // State Variables
+    let solutionBoard = Array(81).fill(0);
+    let initialBoard = Array(81).fill(0);
+    let currentBoard = Array(81).fill(0);
+    let notesBoard = Array.from({ length: 81 }, () => new Set());
+    
+    let selectedCell = null; // Index 0-80
+    let isNotesMode = false;
+    let mistakes = 0;
+    const maxMistakes = 3;
+    let undoHistory = [];
+    
+    // Timer Variables
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isPaused = false;
+    let currentDifficulty = 'medium';
+
+    // DOM Elements
+    const gridEl = document.getElementById('sudoku-grid');
+    const keypadEl = document.getElementById('keypad');
+    const timerEl = document.getElementById('timer-display');
+    const mistakesEl = document.getElementById('mistakes-count');
+    const notesBtn = document.getElementById('notes-toggle-btn');
+    const notesIndicator = document.getElementById('notes-indicator');
+    const difficultySelect = document.getElementById('difficulty-select');
+    const pauseBtn = document.getElementById('pause-btn');
+    const pauseOverlay = document.getElementById('pause-overlay');
+    const resumeBtn = document.getElementById('resume-btn');
+
+
+    // Initialize UI Layout
+    function initUI() {
+      // Build Grid Cells
+      gridEl.innerHTML = '';
+      for (let i = 0; i < 81; i++) {
+        const row = Math.floor(i / 9);
+        const col = i % 9;
+
+        const cell = document.createElement('div');
+        cell.className = `cell-transition flex items-center justify-center font-bold text-lg sm:text-xl cursor-pointer select-none relative bg-slate-800 ${
+          col % 3 === 2 && col !== 8 ? 'grid-border-thick-r' : ''
+        } ${row % 3 === 2 && row !== 8 ? 'grid-border-thick-b' : ''}`;
+        cell.dataset.index = i;
+
+        // Container for candidate notes inside cell
+        const notesGrid = document.createElement('div');
+        notesGrid.className = 'notes-grid hidden absolute inset-0 p-0.5 pointer-events-none';
+        for (let num = 1; num <= 9; num++) {
+          const noteSpan = document.createElement('span');
+          noteSpan.className = `note-${num} flex items-center justify-center text-[9px] sm:text-[11px] font-semibold text-slate-400`;
+          notesGrid.appendChild(noteSpan);
+        }
+        
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'cell-value z-10';
+
+        cell.appendChild(notesGrid);
+        cell.appendChild(valueSpan);
+
+        cell.addEventListener('click', () => selectCell(i));
+        gridEl.appendChild(cell);
+      }
+
+      // Build Keypad (1-9)
+      keypadEl.innerHTML = '';
+      for (let i = 1; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-press aspect-square bg-slate-800 hover:bg-slate-700 active:bg-blue-600 border border-slate-700/80 rounded-xl text-lg sm:text-xl font-bold text-blue-400 flex flex-col items-center justify-center shadow-md';
+        btn.innerHTML = `<span>${i}</span>`;
+        btn.addEventListener('click', () => handleInput(i));
+        keypadEl.appendChild(btn);
+      }
+    }
+
+
+    // Check validity for number placement
+    function isValidPlacement(board, index, num) {
+      const row = Math.floor(index / 9);
+      const col = index % 9;
+      const boxRow = Math.floor(row / 3) * 3;
+      const boxCol = Math.floor(col / 3) * 3;
+
+      for (let i = 0; i < 9; i++) {
+        // Check row
+        if (board[row * 9 + i] === num && row * 9 + i !== index) return false;
+        // Check col
+        if (board[i * 9 + col] === num && i * 9 + col !== index) return false;
+        // Check 3x3 box
+        const bRow = boxRow + Math.floor(i / 3);
+        const bCol = boxCol + (i % 3);
+        if (board[bRow * 9 + bCol] === num && bRow * 9 + bCol !== index) return false;
+      }
+      return true;
+    }
+
+    // Solve helper using backtracking algorithm
+    function solveSudoku(board) {
+      for (let i = 0; i < 81; i++) {
+        if (board[i] === 0) {
+          const numbers = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+          for (let num of numbers) {
+            if (isValidPlacement(board, i, num)) {
+              board[i] = num;
+              if (solveSudoku(board)) return true;
+              board[i] = 0;
+            }
+          }
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Shuffle Utility
+    function shuffleArray(arr) {
+      const array = [...arr];
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Generate puzzle given difficulty count
+    function generatePuzzle(difficulty) {
+      // 1. Generate full solved board
+      const fullBoard = Array(81).fill(0);
+      solveSudoku(fullBoard);
+      solutionBoard = [...fullBoard];
+
+      // 2. Remove cells according to difficulty target
+      const targetGivens = DIFFICULTY_GIVENS[difficulty] || 34;
+      const puzzle = [...fullBoard];
+      const indices = shuffleArray([...Array(81).keys()]);
+
+      let removed = 0;
+      const targetToRemove = 81 - targetGivens;
+
+      for (let idx of indices) {
+        if (removed >= targetToRemove) break;
+        puzzle[idx] = 0;
+        removed++;
+      }
+
+      initialBoard = [...puzzle];
+      currentBoard = [...puzzle];
+      notesBoard = Array.from({ length: 81 }, () => new Set());
+      undoHistory = [];
+      mistakes = 0;
+      updateMistakesDisplay();
+    }
+
+
+    function selectCell(index) {
+      if (isPaused) return;
+      selectedCell = index;
+      renderHighlights();
+    }
+
+    function renderHighlights() {
+      const cells = gridEl.children;
+      if (selectedCell === null) {
+        for (let i = 0; i < 81; i++) {
+          cells[i].classList.remove('bg-blue-600', 'bg-blue-900/40', 'bg-slate-700/60', 'bg-blue-500/30');
+          cells[i].classList.add('bg-slate-800');
+        }
+        return;
+      }
+
+      const selRow = Math.floor(selectedCell / 9);
+      const selCol = selectedCell % 9;
+      const selBoxRow = Math.floor(selRow / 3);
+      const selBoxCol = Math.floor(selCol / 3);
+      const selVal = currentBoard[selectedCell];
+
+      for (let i = 0; i < 81; i++) {
+        const row = Math.floor(i / 9);
+        const col = i % 9;
+        const boxRow = Math.floor(row / 3);
+        const boxCol = Math.floor(col / 3);
+        const val = currentBoard[i];
+
+        // Reset base background
+        cells[i].classList.remove('bg-blue-600', 'bg-blue-900/40', 'bg-slate-700/60', 'bg-blue-500/30', 'bg-slate-800');
+
+        if (i === selectedCell) {
+          // Active selected cell
+          cells[i].classList.add('bg-blue-600');
+        } else if (selVal !== 0 && val === selVal) {
+          // Cells with same value
+          cells[i].classList.add('bg-blue-500/40');
+        } else if (row === selRow || col === selCol || (boxRow === selBoxRow && boxCol === selBoxCol)) {
+          // Related row, col, or box
+          cells[i].classList.add('bg-slate-700/60');
+        } else {
+          cells[i].classList.add('bg-slate-800');
+        }
+      }
+    }
+
+    function renderBoard() {
+      const cells = gridEl.children;
+      for (let i = 0; i < 81; i++) {
+        const cell = cells[i];
+        const valSpan = cell.querySelector('.cell-value');
+        const notesGrid = cell.querySelector('.notes-grid');
+        const val = currentBoard[i];
+        const isGiven = initialBoard[i] !== 0;
+
+        // Reset styles
+        cell.classList.remove('text-slate-100', 'text-blue-400', 'text-rose-400', 'bg-rose-900/50');
+
+        if (val !== 0) {
+          notesGrid.classList.add('hidden');
+          valSpan.classList.remove('hidden');
+          valSpan.textContent = val;
+
+          if (isGiven) {
+            cell.classList.add('text-slate-100', 'font-extrabold');
+          } else {
+            // Check if correct user placement
+            if (val === solutionBoard[i]) {
+              cell.classList.add('text-blue-400', 'font-bold');
+            } else {
+              cell.classList.add('text-rose-400', 'font-bold', 'bg-rose-900/50');
+            }
+          }
+        } else {
+          valSpan.textContent = '';
+          valSpan.classList.add('hidden');
+
+          // Render Notes / Candidates
+          const cellNotes = notesBoard[i];
+          if (cellNotes.size > 0) {
+            notesGrid.classList.remove('hidden');
+            for (let num = 1; num <= 9; num++) {
+              const noteSpan = notesGrid.querySelector(`.note-${num}`);
+              noteSpan.textContent = cellNotes.has(num) ? num : '';
+            }
+          } else {
+            notesGrid.classList.add('hidden');
+          }
+        }
+      }
+      renderHighlights();
+      saveGameState();
+    }
+
+
+    function saveUndoState() {
+      undoHistory.push({
+        board: [...currentBoard],
+        notes: notesBoard.map(set => new Set(set)),
+        mistakes
+      });
+      if (undoHistory.length > 20) undoHistory.shift();
+    }
+
+    function handleInput(num) {
+      if (selectedCell === null || isPaused) return;
+      if (initialBoard[selectedCell] !== 0) return; // Clues cannot be altered
+
+      saveUndoState();
+
+      if (isNotesMode) {
+        // Toggle Candidate Note
+        currentBoard[selectedCell] = 0; // Clear value if setting note
+        const notes = notesBoard[selectedCell];
+        if (notes.has(num)) {
+          notes.delete(num);
+        } else {
+          notes.add(num);
+        }
+      } else {
+        // Fill Cell Value
+        notesBoard[selectedCell].clear();
+        currentBoard[selectedCell] = num;
+
+        // Verify mistake
+        if (num !== solutionBoard[selectedCell]) {
+          mistakes++;
+          updateMistakesDisplay();
+          if (mistakes >= maxMistakes) {
+            handleGameOver();
+            return;
+          }
+        } else {
+          // Remove filled candidate from related row, col, box notes
+          clearRelatedNotes(selectedCell, num);
+        }
+      }
+
+      renderBoard();
+      checkWinCondition();
+    }
+
+    function clearRelatedNotes(index, num) {
+      const row = Math.floor(index / 9);
+      const col = index % 9;
+      const boxRow = Math.floor(row / 3) * 3;
+      const boxCol = Math.floor(col / 3) * 3;
+
+      for (let i = 0; i < 9; i++) {
+        notesBoard[row * 9 + i].delete(num);
+        notesBoard[i * 9 + col].delete(num);
+        const bRow = boxRow + Math.floor(i / 3);
+        const bCol = boxCol + (i % 3);
+        notesBoard[bRow * 9 + bCol].delete(num);
+      }
+    }
+
+    function handleErase() {
+      if (selectedCell === null || isPaused) return;
+      if (initialBoard[selectedCell] !== 0) return;
+
+      saveUndoState();
+      currentBoard[selectedCell] = 0;
+      notesBoard[selectedCell].clear();
+      renderBoard();
+    }
+
+    function handleUndo() {
+      if (undoHistory.length === 0 || isPaused) return;
+      const lastState = undoHistory.pop();
+      currentBoard = lastState.board;
+      notesBoard = lastState.notes;
+      mistakes = lastState.mistakes;
+      updateMistakesDisplay();
+      renderBoard();
+    }
+
+    function handleHint() {
+      if (selectedCell === null || isPaused) return;
+      if (initialBoard[selectedCell] !== 0) return;
+      if (currentBoard[selectedCell] === solutionBoard[selectedCell]) return;
+
+      saveUndoState();
+      currentBoard[selectedCell] = solutionBoard[selectedCell];
+      notesBoard[selectedCell].clear();
+      clearRelatedNotes(selectedCell, solutionBoard[selectedCell]);
+      renderBoard();
+      checkWinCondition();
+    }
+
+
+    function startTimer() {
+      stopTimer();
+      timerInterval = setInterval(() => {
+        if (!isPaused) {
+          timerSeconds++;
+          updateTimerDisplay();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+      const secs = (timerSeconds % 60).toString().padStart(2, '0');
+      timerEl.textContent = `${mins}:${secs}`;
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      if (isPaused) {
+        pauseOverlay.classList.remove('hidden');
+        document.getElementById('pause-icon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;
+      } else {
+        pauseOverlay.classList.add('hidden');
+        document.getElementById('pause-icon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;
+      }
+    }
+
+    function updateMistakesDisplay() {
+      mistakesEl.textContent = `${mistakes}/${maxMistakes}`;
+    }
+
+    function toggleNotesMode() {
+      isNotesMode = !isNotesMode;
+      if (isNotesMode) {
+        notesBtn.classList.add('border-amber-500/80', 'bg-amber-950/30');
+        notesIndicator.classList.replace('bg-slate-500', 'bg-amber-400');
+      } else {
+        notesBtn.classList.remove('border-amber-500/80', 'bg-amber-950/30');
+        notesIndicator.classList.replace('bg-amber-400', 'bg-slate-500');
+      }
+    }
+
+
+    function checkWinCondition() {
+      for (let i = 0; i < 81; i++) {
+        if (currentBoard[i] !== solutionBoard[i]) return;
+      }
+
+      // Victory Achieved
+      stopTimer();
+      saveBestTime(currentDifficulty, timerSeconds);
+      
+      // Trigger Celebration Effects
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      showModal(true);
+    }
+
+    function handleGameOver() {
+      stopTimer();
+      showModal(false);
+    }
+
+    function showModal(isWin) {
+      const modal = document.getElementById('modal-overlay');
+      const card = document.getElementById('modal-card');
+      const title = document.getElementById('modal-title');
+      const subtitle = document.getElementById('modal-subtitle');
+      const icon = document.getElementById('modal-icon');
+      
+      const bestTimeSecs = getBestTime(currentDifficulty);
+
+      if (isWin) {
+        icon.className = 'w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/30';
+        icon.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+        title.textContent = "Puzzle Solved!";
+        subtitle.textContent = "Great job! You have solved the board.";
+      } else {
+        icon.className = 'w-16 h-16 bg-rose-500/20 text-rose-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-500/30';
+        icon.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+        title.textContent = "Game Over";
+        subtitle.textContent = "You reached the maximum number of mistakes.";
+      }
+
+      document.getElementById('modal-diff').textContent = currentDifficulty;
+      document.getElementById('modal-time').textContent = timerEl.textContent;
+      document.getElementById('modal-best-time').textContent = bestTimeSecs ? formatTime(bestTimeSecs) : '--:--';
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        card.classList.remove('scale-95', 'opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+
+    function hideModal() {
+      const modal = document.getElementById('modal-overlay');
+      const card = document.getElementById('modal-card');
+      card.classList.remove('scale-100', 'opacity-100');
+      card.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60).toString().padStart(2, '0');
+      const s = (secs % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // Local Storage Helpers
+    function saveBestTime(diff, secs) {
+      const currentBest = getBestTime(diff);
+      if (!currentBest || secs < currentBest) {
+        localStorage.setItem(`sudoku_best_${diff}`, secs);
+      }
+    }
+
+    function getBestTime(diff) {
+      const val = localStorage.getItem(`sudoku_best_${diff}`);
+      return val ? parseInt(val, 10) : null;
+    }
+
+    function saveGameState() {
+      const state = {
+        solutionBoard,
+        initialBoard,
+        currentBoard,
+        notesBoard: notesBoard.map(s => Array.from(s)),
+        timerSeconds,
+        mistakes,
+        difficulty: currentDifficulty
+      };
+      localStorage.setItem('sudoku_current_game', JSON.stringify(state));
+    }
+
+    function loadGameState() {
+      const saved = localStorage.getItem('sudoku_current_game');
+      if (!saved) return false;
+      try {
+        const state = JSON.parse(saved);
+        solutionBoard = state.solutionBoard;
+        initialBoard = state.initialBoard;
+        currentBoard = state.currentBoard;
+        notesBoard = state.notesBoard.map(arr => new Set(arr));
+        timerSeconds = state.timerSeconds;
+        mistakes = state.mistakes;
+        currentDifficulty = state.difficulty || 'medium';
+        difficultySelect.value = currentDifficulty;
+        updateMistakesDisplay();
+        updateTimerDisplay();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function startNewGame(difficulty = 'medium') {
+      currentDifficulty = difficulty;
+      timerSeconds = 0;
+      selectedCell = null;
+      isPaused = false;
+      pauseOverlay.classList.add('hidden');
+      updateTimerDisplay();
+      generatePuzzle(difficulty);
+      renderBoard();
+      startTimer();
+    }
+
+    function restartCurrentGame() {
+      currentBoard = [...initialBoard];
+      notesBoard = Array.from({ length: 81 }, () => new Set());
+      undoHistory = [];
+      mistakes = 0;
+      timerSeconds = 0;
+      selectedCell = null;
+      updateMistakesDisplay();
+      updateTimerDisplay();
+      renderBoard();
+    }
+
+
+    function setupEventListeners() {
+      // Keypad & Toolbar buttons
+      document.getElementById('erase-btn').addEventListener('click', handleErase);
+      document.getElementById('undo-btn').addEventListener('click', handleUndo);
+      document.getElementById('hint-btn').addEventListener('click', handleHint);
+      notesBtn.addEventListener('click', toggleNotesMode);
+      pauseBtn.addEventListener('click', togglePause);
+      resumeBtn.addEventListener('click', togglePause);
+
+      document.getElementById('new-game-btn').addEventListener('click', () => {
+        startNewGame(difficultySelect.value);
+      });
+
+      document.getElementById('restart-btn').addEventListener('click', () => {
+        restartCurrentGame();
+      });
+
+      difficultySelect.addEventListener('change', (e) => {
+        startNewGame(e.target.value);
+      });
+
+      document.getElementById('modal-play-again').addEventListener('click', () => {
+        hideModal();
+        startNewGame(difficultySelect.value);
+      });
+
+      // Desktop Keyboard support
+      window.addEventListener('keydown', (e) => {
+        if (isPaused) return;
+
+        if (e.key >= '1' && e.key <= '9') {
+          handleInput(parseInt(e.key, 10));
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+          handleErase();
+        } else if (e.key.toLowerCase() === 'n') {
+          toggleNotesMode();
+        } else if (e.key.toLowerCase() === 'u') {
+          handleUndo();
+        } else if (selectedCell !== null) {
+          // Arrow key navigation
+          let row = Math.floor(selectedCell / 9);
+          let col = selectedCell % 9;
+
+          if (e.key === 'ArrowUp') row = (row - 1 + 9) % 9;
+          else if (e.key === 'ArrowDown') row = (row + 1) % 9;
+          else if (e.key === 'ArrowLeft') col = (col - 1 + 9) % 9;
+          else if (e.key === 'ArrowRight') col = (col + 1) % 9;
+
+          selectCell(row * 9 + col);
+        }
+      });
+    }
+
+    // Game Lifecycle Execution
+    window.onload = function() {
+      initUI();
+      setupEventListeners();
+
+      if (!loadGameState()) {
+        startNewGame('medium');
+      } else {
+        renderBoard();
+        startTimer();
+      }
+    };
+  </script>
+</body>
+</html>

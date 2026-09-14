@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniAttend Pro - University Attendance Management System</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: 'var(--color-brand-50)',
+              100: 'var(--color-brand-100)',
+              500: 'var(--color-brand-500)',
+              600: 'var(--color-brand-600)',
+              700: 'var(--color-brand-700)',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      /* Default Theme: University Deep Navy */
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-sidebar: #0f172a;
+      --bg-hover: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-main: #334155;
+      
+      --color-brand-50: #eff6ff;
+      --color-brand-100: #dbeafe;
+      --color-brand-500: #3b82f6;
+      --color-brand-600: #2563eb;
+      --color-brand-700: #1d4ed8;
+      
+      --color-accent: #3b82f6;
+    }
+
+    /* Light Academic Theme Variables */
+    [data-theme="light-academic"] {
+      --bg-main: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-sidebar: #1e293b;
+      --bg-hover: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-main: #e2e8f0;
+      
+      --color-brand-50: #eff6ff;
+      --color-brand-100: #dbeafe;
+      --color-brand-500: #2563eb;
+      --color-brand-600: #1d4ed8;
+      --color-brand-700: #1e40af;
+      --color-accent: #2563eb;
+    }
+
+    /* Dark Cyber Theme Variables */
+    [data-theme="dark-cyber"] {
+      --bg-main: #05050a;
+      --bg-card: #0d0f18;
+      --bg-sidebar: #080910;
+      --bg-hover: #171b2a;
+      --text-main: #f1f5f9;
+      --text-muted: #64748b;
+      --border-main: #1e2640;
+      
+      --color-brand-50: #ecfeff;
+      --color-brand-100: #cffafe;
+      --color-brand-500: #06b6d4;
+      --color-brand-600: #0891b2;
+      --color-brand-700: #0e7490;
+      --color-accent: #06b6d4;
+    }
+
+    /* Emerald Scholar Theme Variables */
+    [data-theme="emerald-scholar"] {
+      --bg-main: #062016;
+      --bg-card: #0b2e21;
+      --bg-sidebar: #041710;
+      --bg-hover: #134e38;
+      --text-main: #f0fdf4;
+      --text-muted: #86efac;
+      --border-main: #165b42;
+      
+      --color-brand-50: #f0fdf4;
+      --color-brand-100: #dcfce7;
+      --color-brand-500: #10b981;
+      --color-brand-600: #059669;
+      --color-brand-700: #047857;
+      --color-accent: #10b981;
+    }
+
+    /* Sunset Violet Theme Variables */
+    [data-theme="sunset-violet"] {
+      --bg-main: #130a21;
+      --bg-card: #1f1235;
+      --bg-sidebar: #0d0617;
+      --bg-hover: #321d52;
+      --text-main: #faf5ff;
+      --text-muted: #c084fc;
+      --border-main: #3b2263;
+      
+      --color-brand-50: #faf5ff;
+      --color-brand-100: #f3e8ff;
+      --color-brand-500: #8b5cf6;
+      --color-brand-600: #7c3aed;
+      --color-brand-700: #6d28d9;
+      --color-accent: #8b5cf6;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .theme-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-main);
+    }
+
+    .theme-sidebar {
+      background-color: var(--bg-sidebar);
+      border-color: var(--border-main);
+    }
+
+    .theme-hover:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .theme-border {
+      border-color: var(--border-main);
+    }
+
+    .theme-text-muted {
+      color: var(--text-muted);
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-main);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-brand-500);
+    }
+
+    /* Custom Pulse animation for status */
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .status-active-pulse {
+      animation: statusPulse 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden text-sm">
+
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside id="sidebar" class="theme-sidebar border-r w-64 flex-shrink-0 flex flex-col transition-all duration-300 z-30">
+      
+      <!-- Brand Logo / Header -->
+      <div class="p-4 border-b theme-border flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20">
+            U
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-wide leading-tight">UniAttend <span class="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">PRO</span></h1>
+            <p class="text-xs theme-text-muted">Smart Campus Suite</p>
+          </div>
+        </div>
+        <button id="toggle-sidebar-btn" class="md:hidden text-gray-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <div class="px-3 py-2 text-[11px] font-bold uppercase tracking-wider theme-text-muted">Main Menu</div>
+        
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium transition text-white bg-blue-600/90 shadow-md">
+          <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+          <span>Dashboard Overview</span>
+        </button>
+
+        <button onclick="switchTab('mark-attendance')" id="nav-mark-attendance" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium transition theme-text-muted theme-hover">
+          <i class="fa-solid fa-clipboard-user w-5 text-center"></i>
+          <span>Mark Attendance</span>
+        </button>
+
+        <button onclick="switchTab('roster')" id="nav-roster" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium transition theme-text-muted theme-hover">
+          <i class="fa-solid fa-users w-5 text-center"></i>
+          <span>Student Roster</span>
+        </button>
+
+        <div class="px-3 py-2 mt-4 text-[11px] font-bold uppercase tracking-wider theme-text-muted">Analytics & Export</div>
+
+        <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium transition theme-text-muted theme-hover">
+          <i class="fa-solid fa-chart-line w-5 text-center"></i>
+          <span>Subject Analytics</span>
+        </button>
+
+        <button onclick="switchTab('reports')" id="nav-reports" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium transition theme-text-muted theme-hover">
+          <i class="fa-solid fa-file-invoice w-5 text-center"></i>
+          <span>Defaulters & Reports</span>
+        </button>
+
+        <div class="px-3 py-2 mt-4 text-[11px] font-bold uppercase tracking-wider theme-text-muted">System</div>
+
+        <button onclick="switchTab('settings')" id="nav-settings" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium transition theme-text-muted theme-hover">
+          <i class="fa-solid fa-sliders w-5 text-center"></i>
+          <span>Theme & Settings</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer User Profile -->
+      <div class="p-3 border-t theme-border">
+        <div class="flex items-center space-x-3 p-2 rounded-xl theme-hover cursor-pointer" onclick="switchTab('settings')">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="w-9 h-9 rounded-full object-cover border-2 border-blue-500" alt="Prof. User" onerror="this.src='https://placehold.co/100x100/1e293b/ffffff?text=DR'">
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-xs truncate">Dr. Sarah Jenkins</p>
+            <p class="text-[11px] theme-text-muted truncate">Dean of Computer Science</p>
+          </div>
+          <i class="fa-solid fa-gear theme-text-muted text-xs"></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="theme-card border-b h-16 flex items-center justify-between px-4 md:px-6 z-20 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <button id="open-sidebar-btn" class="md:hidden text-gray-400 hover:text-white p-2 rounded-lg theme-hover">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+          
+          <!-- Search input -->
+          <div class="relative hidden sm:block w-64 lg:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted text-xs"></i>
+            <input type="text" id="global-search" oninput="handleGlobalSearch(this.value)" placeholder="Search students, roll no, department..." class="w-full bg-black/20 theme-border border rounded-xl pl-9 pr-4 py-1.5 text-xs focus:outline-none focus:border-blue-500 transition">
+            <!-- Search Results Dropdown -->
+            <div id="search-dropdown" class="hidden absolute left-0 right-0 top-11 theme-card border rounded-xl shadow-2xl p-2 z-50 max-h-60 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- Clock & Dynamic Controls -->
+        <div class="flex items-center space-x-3 md:space-x-4">
+          
+          <!-- Real-Time Date & Clock Indicator -->
+          <div class="hidden lg:flex flex-col items-end border-r theme-border pr-4">
+            <span id="live-time" class="font-mono text-xs font-bold text-blue-400">00:00:00 AM</span>
+            <span id="live-date" class="text-[11px] theme-text-muted">Mon, Sep 14, 2026</span>
+          </div>
+
+          <!-- Quick Theme Preset Selector -->
+          <div class="relative">
+            <select id="quick-theme-select" onchange="applyThemePreset(this.value)" class="bg-black/20 theme-border border rounded-xl text-xs px-3 py-1.5 focus:outline-none cursor-pointer">
+              <option value="deep-navy">🌌 Navy Theme</option>
+              <option value="light-academic">🏛️ Light Academic</option>
+              <option value="dark-cyber">⚡ Dark Cyber</option>
+              <option value="emerald-scholar">🌿 Emerald Scholar</option>
+              <option value="sunset-violet">🔮 Sunset Violet</option>
+            </select>
+          </div>
+
+          <!-- Quick Actions Button -->
+          <button onclick="openAddStudentModal()" class="hidden md:flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs px-3.5 py-1.5 rounded-xl font-medium shadow-md shadow-blue-600/20 transition">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Add Student</span>
+          </button>
+
+          <!-- Notification Dropdown -->
+          <div class="relative">
+            <button onclick="toggleNotifications()" class="relative p-2 rounded-xl theme-hover theme-text-muted hover:text-white transition">
+              <i class="fa-solid fa-bell text-base"></i>
+              <span id="notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div id="notif-dropdown" class="hidden absolute right-0 top-11 w-80 theme-card border rounded-2xl shadow-2xl p-3 z-50">
+              <div class="flex justify-between items-center border-b theme-border pb-2 mb-2">
+                <span class="font-bold text-xs">Notifications</span>
+                <span class="text-[10px] text-blue-400 cursor-pointer" onclick="clearNotifs()">Clear all</span>
+              </div>
+              <div class="space-y-2 text-xs" id="notif-list">
+                <div class="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 flex space-x-2">
+                  <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5"></i>
+                  <div>
+                    <p class="font-medium text-xs">Defaulter Alert</p>
+                    <p class="text-[11px] theme-text-muted">4 Students fall below 75% threshold in CSE-A.</p>
+                  </div>
+                </div>
+                <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex space-x-2">
+                  <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
+                  <div>
+                    <p class="font-medium text-xs">Database Synced</p>
+                    <p class="text-[11px] theme-text-muted">Attendance auto-saved to local browser vault.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </header>
+
+      <!-- VIEW PANELS CONTAINER -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        
+        <!-- ================= DASHBOARD OVERVIEW ================= -->
+        <section id="tab-dashboard" class="space-y-6">
+          
+          <!-- Banner Welcome -->
+          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 p-6 text-white shadow-xl">
+            <div class="relative z-10 max-w-2xl">
+              <span class="px-2.5 py-1 rounded-full bg-white/20 text-white font-semibold text-xs backdrop-blur-md">Academic Session 2026-2027</span>
+              <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight mt-2">University Attendance Command Center</h2>
+              <p class="text-blue-100 text-xs md:text-sm mt-1 leading-relaxed">
+                Real-time tracking, low attendance risk detection, automated compliance reporting across all faculty departments.
+              </p>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button onclick="switchTab('mark-attendance')" class="bg-white text-blue-900 font-bold px-4 py-2 rounded-xl text-xs hover:bg-blue-50 transition shadow-lg">
+                  <i class="fa-solid fa-pen-to-square mr-1.5"></i> Take Attendance Now
+                </button>
+                <button onclick="switchTab('reports')" class="bg-black/20 hover:bg-black/30 border border-white/20 text-white font-semibold px-4 py-2 rounded-xl text-xs backdrop-blur-md transition">
+                  <i class="fa-solid fa-download mr-1.5"></i> View Defaulters Report
+                </button>
+              </div>
+            </div>
+            <!-- Background Decorative Spheres -->
+            <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          </div>
+
+          <!-- KPI STAT CARDS -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="theme-card border rounded-2xl p-4 shadow-sm relative overflow-hidden">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs theme-text-muted font-medium">Total Active Students</p>
+                  <h3 id="stat-total-students" class="text-2xl font-bold mt-1">--</h3>
+                  <span class="inline-block mt-2 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <i class="fa-solid fa-arrow-trend-up"></i> 100% Enrolled
+                  </span>
+                </div>
+                <div class="p-3 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                  <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-card border rounded-2xl p-4 shadow-sm relative overflow-hidden">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs theme-text-muted font-medium">Overall University Avg</p>
+                  <h3 id="stat-avg-attendance" class="text-2xl font-bold mt-1">--%</h3>
+                  <span id="stat-avg-badge" class="inline-block mt-2 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    Optimal Compliance
+                  </span>
+                </div>
+                <div class="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                  <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-card border rounded-2xl p-4 shadow-sm relative overflow-hidden">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs theme-text-muted font-medium">Classes Today</p>
+                  <h3 id="stat-classes-today" class="text-2xl font-bold mt-1">18 Sessions</h3>
+                  <span class="inline-block mt-2 text-[11px] font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                    9 Active Depts
+                  </span>
+                </div>
+                <div class="p-3 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                  <i class="fa-solid fa-chalkboard-user text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-card border rounded-2xl p-4 shadow-sm relative overflow-hidden">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs theme-text-muted font-medium">At-Risk (< 75%)</p>
+                  <h3 id="stat-at-risk" class="text-2xl font-bold mt-1 text-red-400">--</h3>
+                  <span class="inline-block mt-2 text-[11px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
+                    Needs Parent Alert
+                  </span>
+                </div>
+                <div class="p-3 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
+                  <i class="fa-solid fa-circle-exclamation text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CHARTS & RECENT ACTIVITY GRID -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Attendance by Department Chart -->
+            <div class="lg:col-span-2 theme-card border rounded-2xl p-5 shadow-sm">
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h3 class="font-bold text-base">Departmental Attendance Index</h3>
+                  <p class="text-xs theme-text-muted">Comparative overall percentage across active faculties</p>
+                </div>
+                <button onclick="renderDashboardCharts()" class="text-xs text-blue-400 hover:text-blue-300">
+                  <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                </button>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="deptChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Recent System Activity Feed -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 class="font-bold text-base mb-1">Live Audit Log</h3>
+                <p class="text-xs theme-text-muted mb-4">Recent attendance entries and actions</p>
+                <div class="space-y-3" id="activity-feed">
+                  <!-- Dynamic Feed Entries -->
+                </div>
+              </div>
+              <div class="pt-4 border-t theme-border mt-4 text-center">
+                <button onclick="switchTab('reports')" class="text-xs text-blue-400 hover:underline font-medium">View Full Audit History →</button>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ================= MARK ATTENDANCE ================= -->
+        <section id="tab-mark-attendance" class="hidden space-y-6">
+          
+          <!-- Filters & Header Controls -->
+          <div class="theme-card border rounded-2xl p-5 shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-xl font-bold">Interactive Attendance Marker</h2>
+                <p class="text-xs theme-text-muted">Select department filters, set status flags, and record class logs</p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button onclick="markAllStatus('Present')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 text-xs font-semibold transition">
+                  <i class="fa-solid fa-check mr-1"></i> All Present
+                </button>
+                <button onclick="markAllStatus('Absent')" class="px-3 py-1.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 text-xs font-semibold transition">
+                  <i class="fa-solid fa-xmark mr-1"></i> All Absent
+                </button>
+                <button onclick="saveCurrentSessionAttendance()" class="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition">
+                  <i class="fa-solid fa-floppy-disk mr-1"></i> Save Class Log
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Controls Matrix -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 pt-3 border-t theme-border">
+              <div>
+                <label class="block text-[11px] theme-text-muted font-semibold mb-1">Department</label>
+                <select id="filter-mark-dept" onchange="renderMarkList()" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500">
+                  <option value="ALL">All Departments</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Electronics & Comm">Electronics & Comm</option>
+                  <option value="Electrical Eng">Electrical Eng</option>
+                  <option value="Mechanical Eng">Mechanical Eng</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[11px] theme-text-muted font-semibold mb-1">Semester</label>
+                <select id="filter-mark-sem" onchange="renderMarkList()" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500">
+                  <option value="ALL">All Semesters</option>
+                  <option value="Semester 1">Semester 1</option>
+                  <option value="Semester 3">Semester 3</option>
+                  <option value="Semester 5">Semester 5</option>
+                  <option value="Semester 7">Semester 7</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[11px] theme-text-muted font-semibold mb-1">Section</label>
+                <select id="filter-mark-sec" onchange="renderMarkList()" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-1.5 text-xs focus:outline-none">
+                  <option value="ALL">All Sections</option>
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[11px] theme-text-muted font-semibold mb-1">Subject / Course</label>
+                <select id="filter-mark-subject" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-1.5 text-xs focus:outline-none">
+                  <option value="Data Structures & Algorithms">Data Structures & Algo</option>
+                  <option value="Database Systems">Database Systems</option>
+                  <option value="Machine Learning">Machine Learning</option>
+                  <option value="Digital Signal Processing">Digital Signal Processing</option>
+                  <option value="Thermodynamics">Thermodynamics</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[11px] theme-text-muted font-semibold mb-1">Class Date</label>
+                <input type="date" id="filter-mark-date" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-1.5 text-xs focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Attendance Live Summary Bar -->
+            <div class="flex flex-wrap gap-4 items-center justify-between p-3 rounded-xl bg-black/20 theme-border border text-xs">
+              <div class="flex space-x-4">
+                <span>Total Candidates: <strong id="mark-count-total" class="text-blue-400">0</strong></span>
+                <span>Present: <strong id="mark-count-present" class="text-emerald-400">0</strong></span>
+                <span>Absent: <strong id="mark-count-absent" class="text-red-400">0</strong></span>
+                <span>Late: <strong id="mark-count-late" class="text-amber-400">0</strong></span>
+                <span>Excused: <strong id="mark-count-excused" class="text-purple-400">0</strong></span>
+              </div>
+              <span class="text-[11px] theme-text-muted"><i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Auto-Sync Vault Active</span>
+            </div>
+          </div>
+
+          <!-- Student Cards List for Marking -->
+          <div id="mark-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamic Cards inserted via JS -->
+          </div>
+
+        </section>
+
+        <!-- ================= STUDENT ROSTER ================= -->
+        <section id="tab-roster" class="hidden space-y-6">
+          
+          <div class="theme-card border rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold">Student Master Directory</h2>
+              <p class="text-xs theme-text-muted">Manage active university enrollments, profiles, and attendance records</p>
+            </div>
+            <div class="flex items-center space-x-3 w-full md:w-auto">
+              <div class="relative flex-1 md:w-64">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted text-xs"></i>
+                <input type="text" id="roster-search" oninput="renderRosterTable()" placeholder="Search name, roll..." class="w-full bg-black/20 theme-border border rounded-xl pl-9 pr-3 py-1.5 text-xs focus:outline-none">
+              </div>
+              <button onclick="openAddStudentModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded-xl font-bold transition flex items-center space-x-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Student</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="theme-card border rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b theme-border bg-black/20 text-[11px] font-bold uppercase tracking-wider theme-text-muted">
+                    <th class="p-3 pl-5">Student / Roll</th>
+                    <th class="p-3">Department</th>
+                    <th class="p-3">Semester</th>
+                    <th class="p-3">Attendance %</th>
+                    <th class="p-3">Compliance Status</th>
+                    <th class="p-3 text-right pr-5">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="roster-table-body" class="divide-y theme-border text-xs">
+                  <!-- Dynamic Table Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================= SUBJECT ANALYTICS ================= -->
+        <section id="tab-analytics" class="hidden space-y-6">
+          <div class="theme-card border rounded-2xl p-5 shadow-sm">
+            <h2 class="text-xl font-bold">Subject & Department Analytics</h2>
+            <p class="text-xs theme-text-muted">Deep analysis of class attendance metrics and performance correlation</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Subject Breakdown Chart -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm">
+              <h3 class="font-bold text-base mb-2">Attendance by Course Subject</h3>
+              <div class="h-64 relative">
+                <canvas id="subjectChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Subject Metrics Table -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 class="font-bold text-base mb-3">Course Performance Benchmark</h3>
+                <div class="space-y-3" id="subject-metrics-list">
+                  <!-- Dynamic metrics list -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= DEFAULTERS & REPORTS ================= -->
+        <section id="tab-reports" class="hidden space-y-6">
+          <div class="theme-card border rounded-2xl p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Defaulter List (< 75% Rule)</h2>
+              <p class="text-xs theme-text-muted">Students falling below mandatory attendance percentage requirement</p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <button onclick="exportDefaultersCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition flex items-center space-x-2">
+                <i class="fa-solid fa-file-csv"></i>
+                <span>Export Defaulter CSV</span>
+              </button>
+              <button onclick="triggerParentAlerts()" class="bg-red-600 hover:bg-red-500 text-white text-xs px-4 py-2 rounded-xl font-bold transition flex items-center space-x-2">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Simulate Parent Warning Notices</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Defaulters Table -->
+          <div class="theme-card border rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b theme-border bg-red-500/10 text-[11px] font-bold uppercase tracking-wider text-red-400">
+                    <th class="p-3 pl-5">Roll No</th>
+                    <th class="p-3">Student Name</th>
+                    <th class="p-3">Department</th>
+                    <th class="p-3">Contact Email</th>
+                    <th class="p-3">Current %</th>
+                    <th class="p-3 text-right pr-5">Shortfall Classes</th>
+                  </tr>
+                </thead>
+                <tbody id="defaulter-table-body" class="divide-y theme-border text-xs">
+                  <!-- Dynamic Defaulter Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= THEME & SETTINGS ================= -->
+        <section id="tab-settings" class="hidden space-y-6">
+          <div class="theme-card border rounded-2xl p-5 shadow-sm">
+            <h2 class="text-xl font-bold">System Themes & Preferences</h2>
+            <p class="text-xs theme-text-muted">Customize color palettes, accent variables, and manage local storage</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Dynamic Theme Engine Selector -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm space-y-4">
+              <h3 class="font-bold text-base border-b theme-border pb-2">Theme Palette Selector</h3>
+              
+              <div class="grid grid-cols-1 gap-3">
+                
+                <div onclick="applyThemePreset('deep-navy')" class="p-3 rounded-xl border theme-border theme-hover cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full bg-slate-900 border border-blue-500"></div>
+                    <div>
+                      <p class="font-semibold text-xs">University Deep Navy</p>
+                      <p class="text-[11px] theme-text-muted">Default dark academic aesthetic</p>
+                    </div>
+                  </div>
+                  <span class="text-xs text-blue-400 font-bold">Active</span>
+                </div>
+
+                <div onclick="applyThemePreset('light-academic')" class="p-3 rounded-xl border theme-border theme-hover cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full bg-slate-100 border border-slate-300"></div>
+                    <div>
+                      <p class="font-semibold text-xs">Light Academic</p>
+                      <p class="text-[11px] theme-text-muted">High contrast crisp light theme</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div onclick="applyThemePreset('dark-cyber')" class="p-3 rounded-xl border theme-border theme-hover cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full bg-black border border-cyan-400"></div>
+                    <div>
+                      <p class="font-semibold text-xs">Dark Cyber</p>
+                      <p class="text-[11px] theme-text-muted">Neon cyan black palette</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div onclick="applyThemePreset('emerald-scholar')" class="p-3 rounded-xl border theme-border theme-hover cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full bg-emerald-950 border border-emerald-400"></div>
+                    <div>
+                      <p class="font-semibold text-xs">Emerald Scholar</p>
+                      <p class="text-[11px] theme-text-muted">Deep forest green styling</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div onclick="applyThemePreset('sunset-violet')" class="p-3 rounded-xl border theme-border theme-hover cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full bg-purple-950 border border-purple-400"></div>
+                    <div>
+                      <p class="font-semibold text-xs">Sunset Violet</p>
+                      <p class="text-[11px] theme-text-muted">Rich violet gradient style</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Custom Color Picker & Data Management -->
+            <div class="space-y-6">
+              
+              <div class="theme-card border rounded-2xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-base border-b theme-border pb-2">Custom Accent Picker</h3>
+                <div>
+                  <label class="block text-xs theme-text-muted mb-2">Live Accent Color Override</label>
+                  <div class="flex items-center space-x-3">
+                    <input type="color" id="accent-picker" onchange="applyCustomAccent(this.value)" value="#3b82f6" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0">
+                    <span id="accent-hex" class="font-mono text-xs font-bold">#3b82f6</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="theme-card border rounded-2xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-base border-b theme-border pb-2">Database Storage Vault</h3>
+                <p class="text-xs theme-text-muted">Manage persistent browser cache records</p>
+                <div class="flex flex-wrap gap-3">
+                  <button onclick="resetToInitialDataset()" class="px-4 py-2 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 font-semibold text-xs transition">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Reset Initial Demo Data
+                  </button>
+                  <button onclick="clearLocalStorage()" class="px-4 py-2 rounded-xl bg-gray-600/20 text-gray-300 border border-gray-500/30 hover:bg-gray-600/30 font-semibold text-xs transition">
+                    <i class="fa-solid fa-trash mr-1"></i> Clear Local Cache
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ================= MODALS & TOAST NOTIFICATIONS ================= -->
+
+  <!-- ADD STUDENT MODAL -->
+  <div id="modal-add-student" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="theme-card border rounded-2xl w-full max-w-lg p-6 shadow-2xl relative space-y-4 animate-in fade-in zoom-in duration-200">
+      <div class="flex justify-between items-center border-b theme-border pb-3">
+        <h3 class="font-bold text-base"><i class="fa-solid fa-user-plus text-blue-500 mr-2"></i>Enroll New Student</h3>
+        <button onclick="closeAddStudentModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="form-add-student" onsubmit="handleAddStudentSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs theme-text-muted mb-1">Full Name *</label>
+          <input type="text" id="new-student-name" required placeholder="e.g., Alex Mercer" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs theme-text-muted mb-1">Roll Number *</label>
+            <input type="text" id="new-student-roll" required placeholder="2026-CSE-099" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs theme-text-muted mb-1">Department *</label>
+            <select id="new-student-dept" required class="w-full bg-black/20 theme-border border rounded-xl px-3 py-2 text-xs focus:outline-none">
+              <option value="Computer Science">Computer Science</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Electronics & Comm">Electronics & Comm</option>
+              <option value="Electrical Eng">Electrical Eng</option>
+              <option value="Mechanical Eng">Mechanical Eng</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs theme-text-muted mb-1">Semester</label>
+            <select id="new-student-sem" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-2 text-xs focus:outline-none">
+              <option value="Semester 1">Semester 1</option>
+              <option value="Semester 3">Semester 3</option>
+              <option value="Semester 5">Semester 5</option>
+              <option value="Semester 7">Semester 7</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs theme-text-muted mb-1">Section</label>
+            <select id="new-student-sec" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-2 text-xs focus:outline-none">
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs theme-text-muted mb-1">Contact Email</label>
+          <input type="email" id="new-student-email" required placeholder="student@university.edu" class="w-full bg-black/20 theme-border border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-3 border-t theme-border">
+          <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 rounded-xl text-xs theme-text-muted theme-hover">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition">Save & Enroll</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- STUDENT DETAIL & HISTORY LOG MODAL -->
+  <div id="modal-student-detail" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="theme-card border rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b theme-border pb-3">
+        <div class="flex items-center space-x-3">
+          <div id="detail-avatar" class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">--</div>
+          <div>
+            <h3 id="detail-name" class="font-bold text-base">--</h3>
+            <p id="detail-sub" class="text-xs theme-text-muted">--</p>
+          </div>
+        </div>
+        <button onclick="closeStudentDetailModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Detail Stats -->
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="p-3 rounded-xl bg-black/20 border theme-border">
+          <p class="text-[11px] theme-text-muted">Overall Percentage</p>
+          <p id="detail-pct" class="text-xl font-bold text-emerald-400">--%</p>
+        </div>
+        <div class="p-3 rounded-xl bg-black/20 border theme-border">
+          <p class="text-[11px] theme-text-muted">Classes Attended</p>
+          <p id="detail-attended" class="text-xl font-bold text-blue-400">0 / 0</p>
+        </div>
+        <div class="p-3 rounded-xl bg-black/20 border theme-border">
+          <p class="text-[11px] theme-text-muted">Compliance Status</p>
+          <p id="detail-status" class="text-xs font-bold mt-1 text-emerald-400">GOOD</p>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div>
+        <h4 class="font-bold text-xs mb-2">Class Log History</h4>
+        <div class="max-h-56 overflow-y-auto border theme-border rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-black/20 border-b theme-border text-[10px] uppercase theme-text-muted">
+                <th class="p-2 pl-3">Date</th>
+                <th class="p-2">Subject</th>
+                <th class="p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody id="detail-history-tbody" class="divide-y theme-border">
+              <!-- Dynamic history logs -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+
+    // INITIAL MOCK DATASET (20+ realistic university students)
+    const initialDataset = [
+      { id: 'S101', roll: '2026-CSE-001', name: 'Ethan Vance', dept: 'Computer Science', sem: 'Semester 5', sec: 'A', email: 'ethan.vance@uni.edu', logs: [ { date: '2026-09-10', subject: 'Data Structures & Algorithms', status: 'Present' }, { date: '2026-09-11', subject: 'Database Systems', status: 'Present' }, { date: '2026-09-12', subject: 'Machine Learning', status: 'Present' } ] },
+      { id: 'S102', roll: '2026-CSE-002', name: 'Sophia Martinez', dept: 'Computer Science', sem: 'Semester 5', sec: 'A', email: 'sophia.m@uni.edu', logs: [ { date: '2026-09-10', subject: 'Data Structures & Algorithms', status: 'Present' }, { date: '2026-09-11', subject: 'Database Systems', status: 'Absent' }, { date: '2026-09-12', subject: 'Machine Learning', status: 'Present' } ] },
+      { id: 'S103', roll: '2026-CSE-003', name: 'Liam O\'Connor', dept: 'Computer Science', sem: 'Semester 5', sec: 'B', email: 'liam.oc@uni.edu', logs: [ { date: '2026-09-10', subject: 'Data Structures & Algorithms', status: 'Absent' }, { date: '2026-09-11', subject: 'Database Systems', status: 'Absent' }, { date: '2026-09-12', subject: 'Machine Learning', status: 'Absent' } ] },
+      { id: 'S104', roll: '2026-DS-010', name: 'Aarav Sharma', dept: 'Data Science', sem: 'Semester 3', sec: 'A', email: 'aarav.s@uni.edu', logs: [ { date: '2026-09-10', subject: 'Machine Learning', status: 'Present' }, { date: '2026-09-11', subject: 'Database Systems', status: 'Present' } ] },
+      { id: 'S105', roll: '2026-DS-011', name: 'Emma Watson', dept: 'Data Science', sem: 'Semester 3', sec: 'A', email: 'emma.w@uni.edu', logs: [ { date: '2026-09-10', subject: 'Machine Learning', status: 'Present' }, { date: '2026-09-11', subject: 'Database Systems', status: 'Late' } ] },
+      { id: 'S106', roll: '2026-ECE-020', name: 'Lucas Chang', dept: 'Electronics & Comm', sem: 'Semester 7', sec: 'A', email: 'lucas.c@uni.edu', logs: [ { date: '2026-09-10', subject: 'Digital Signal Processing', status: 'Present' } ] },
+      { id: 'S107', roll: '2026-ECE-021', name: 'Mia Tanaka', dept: 'Electronics & Comm', sem: 'Semester 7', sec: 'B', email: 'mia.t@uni.edu', logs: [ { date: '2026-09-10', subject: 'Digital Signal Processing', status: 'Absent' }, { date: '2026-09-11', subject: 'Digital Signal Processing', status: 'Absent' } ] },
+      { id: 'S108', roll: '2026-EEE-030', name: 'Noah Goldberg', dept: 'Electrical Eng', sem: 'Semester 1', sec: 'A', email: 'noah.g@uni.edu', logs: [ { date: '2026-09-10', subject: 'Thermodynamics', status: 'Present' } ] },
+      { id: 'S109', roll: '2026-ME-040', name: 'Isabella Silva', dept: 'Mechanical Eng', sem: 'Semester 5', sec: 'A', email: 'isabella.s@uni.edu', logs: [ { date: '2026-09-10', subject: 'Thermodynamics', status: 'Excused' } ] },
+      { id: 'S110', roll: '2026-CSE-004', name: 'Jackson Reed', dept: 'Computer Science', sem: 'Semester 5', sec: 'A', email: 'jackson.r@uni.edu', logs: [ { date: '2026-09-10', subject: 'Data Structures & Algorithms', status: 'Present' }, { date: '2026-09-11', subject: 'Database Systems', status: 'Present' } ] },
+      { id: 'S111', roll: '2026-CSE-005', name: 'Ava Patel', dept: 'Computer Science', sem: 'Semester 5', sec: 'B', email: 'ava.patel@uni.edu', logs: [ { date: '2026-09-10', subject: 'Data Structures & Algorithms', status: 'Present' } ] },
+      { id: 'S112', roll: '2026-DS-012', name: 'Oliver Kim', dept: 'Data Science', sem: 'Semester 3', sec: 'B', email: 'oliver.k@uni.edu', logs: [ { date: '2026-09-10', subject: 'Machine Learning', status: 'Present' } ] },
+      { id: 'S113', roll: '2026-ECE-022', name: 'Charlotte Dubois', dept: 'Electronics & Comm', sem: 'Semester 7', sec: 'A', email: 'charlotte.d@uni.edu', logs: [ { date: '2026-09-10', subject: 'Digital Signal Processing', status: 'Present' } ] },
+      { id: 'S114', roll: '2026-ME-041', name: 'Benjamin Hayes', dept: 'Mechanical Eng', sem: 'Semester 5', sec: 'B', email: 'ben.h@uni.edu', logs: [ { date: '2026-09-10', subject: 'Thermodynamics', status: 'Absent' }, { date: '2026-09-11', subject: 'Thermodynamics', status: 'Absent' } ] },
+      { id: 'S115', roll: '2026-CSE-006', name: 'Amara Johnson', dept: 'Computer Science', sem: 'Semester 1', sec: 'A', email: 'amara.j@uni.edu', logs: [ { date: '2026-09-10', subject: 'Data Structures & Algorithms', status: 'Present' } ] },
+      { id: 'S116', roll: '2026-DS-013', name: 'Daniel Brooks', dept: 'Data Science', sem: 'Semester 3', sec: 'A', email: 'daniel.b@uni.edu', logs: [ { date: '2026-09-10', subject: 'Machine Learning', status: 'Present' } ] },
+      { id: 'S117', roll: '2026-EEE-031', name: 'Elena Rostova', dept: 'Electrical Eng', sem: 'Semester 1', sec: 'B', email: 'elena.r@uni.edu', logs: [ { date: '2026-09-10', subject: 'Thermodynamics', status: 'Present' } ] },
+      { id: 'S118', roll: '2026-CSE-007', name: 'William Zhang', dept: 'Computer Science', sem: 'Semester 7', sec: 'A', email: 'william.z@uni.edu', logs: [ { date: '2026-09-10', subject: 'Database Systems', status: 'Present' } ] },
+      { id: 'S119', roll: '2026-ECE-023', name: 'Zoe Kravitz', dept: 'Electronics & Comm', sem: 'Semester 3', sec: 'A', email: 'zoe.k@uni.edu', logs: [ { date: '2026-09-10', subject: 'Digital Signal Processing', status: 'Present' } ] },
+      { id: 'S120', roll: '2026-DS-014', name: 'Karthik Raja', dept: 'Data Science', sem: 'Semester 5', sec: 'B', email: 'karthik.r@uni.edu', logs: [ { date: '2026-09-10', subject: 'Machine Learning', status: 'Present' } ] }
+    ];
+
+    // Global App State
+    let studentsData = [];
+    let currentMarkingSession = {}; // Stores temp status per student ID for active session
+    let activeTheme = 'deep-navy';
+    let deptChartInstance = null;
+    let subjectChartInstance = null;
+
+    window.onload = function() {
+      initApp();
+      startLiveClock();
+    };
+
+    function initApp() {
+      // Load saved dataset or default
+      const savedData = localStorage.getItem('uni_attend_students');
+      if (savedData) {
+        try {
+          studentsData = JSON.parse(savedData);
+        } catch(e) {
+          studentsData = [...initialDataset];
+        }
+      } else {
+        studentsData = [...initialDataset];
+        saveStudentsData();
+      }
+
+      // Set default date picker to today
+      const datePicker = document.getElementById('filter-mark-date');
+      if (datePicker) {
+        datePicker.value = new Date().toISOString().split('T')[0];
+      }
+
+      // Initialize UI
+      updateDashboardKPIs();
+      renderDashboardCharts();
+      renderMarkList();
+      renderRosterTable();
+      renderDefaulterTable();
+      renderSubjectAnalytics();
+      renderActivityLog();
+
+      // Mobile sidebar button handlers
+      document.getElementById('open-sidebar-btn').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('-translate-x-full');
+      });
+      document.getElementById('toggle-sidebar-btn').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+      });
+
+      showToast('UniAttend Pro System Ready', 'info');
+    }
+
+    function startLiveClock() {
+      setInterval(() => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        
+        const liveTimeEl = document.getElementById('live-time');
+        const liveDateEl = document.getElementById('live-date');
+        if (liveTimeEl) liveTimeEl.textContent = timeStr;
+        if (liveDateEl) liveDateEl.textContent = dateStr;
+      }, 1000);
+    }
+
+    function switchTab(tabId) {
+      // Hide all tabs
+      const tabs = ['dashboard', 'mark-attendance', 'roster', 'analytics', 'reports', 'settings'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        const navEl = document.getElementById(`nav-${t}`);
+        if (el) el.classList.add('hidden');
+        if (navEl) {
+          navEl.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+          navEl.classList.add('theme-text-muted', 'theme-hover');
+        }
+      });
+
+      // Show selected tab
+      const targetEl = document.getElementById(`tab-${tabId}`);
+      const targetNav = document.getElementById(`nav-${tabId}`);
+      if (targetEl) targetEl.classList.remove('hidden');
+      if (targetNav) {
+        targetNav.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+        targetNav.classList.remove('theme-text-muted', 'theme-hover');
+      }
+
+      // Trigger recalculations on tab switch
+      if (tabId === 'dashboard') {
+        updateDashboardKPIs();
+        renderDashboardCharts();
+      } else if (tabId === 'mark-attendance') {
+        renderMarkList();
+      } else if (tabId === 'roster') {
+        renderRosterTable();
+      } else if (tabId === 'reports') {
+        renderDefaulterTable();
+      } else if (tabId === 'analytics') {
+        renderSubjectAnalytics();
+      }
+    }
+
+    function calculateStudentStats(student) {
+      if (!student.logs || student.logs.length === 0) {
+        return { attended: 0, total: 0, percentage: 100 };
+      }
+      let total = student.logs.length;
+      let attended = student.logs.filter(l => l.status === 'Present' || l.status === 'Late' || l.status === 'Excused').length;
+      let percentage = Math.round((attended / total) * 100);
+      return { attended, total, percentage };
+    }
+
+    function saveStudentsData() {
+      localStorage.setItem('uni_attend_students', JSON.stringify(studentsData));
+    }
+
+    function updateDashboardKPIs() {
+      let totalStudents = studentsData.length;
+      let totalPctSum = 0;
+      let atRiskCount = 0;
+
+      studentsData.forEach(s => {
+        let stats = calculateStudentStats(s);
+        totalPctSum += stats.percentage;
+        if (stats.percentage < 75) {
+          atRiskCount++;
+        }
+      });
+
+      let overallAvg = totalStudents > 0 ? Math.round(totalPctSum / totalStudents) : 0;
+
+      document.getElementById('stat-total-students').textContent = totalStudents;
+      document.getElementById('stat-avg-attendance').textContent = `${overallAvg}%`;
+      document.getElementById('stat-at-risk').textContent = atRiskCount;
+
+      const badge = document.getElementById('stat-avg-badge');
+      if (overallAvg < 75) {
+        badge.className = 'inline-block mt-2 text-[11px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20';
+        badge.textContent = 'Critical Shortfall';
+      } else {
+        badge.className = 'inline-block mt-2 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20';
+        badge.textContent = 'Optimal Compliance';
+      }
+    }
+
+    function renderDashboardCharts() {
+      const ctx = document.getElementById('deptChart');
+      if (!ctx) return;
+
+      // Group students by department and calculate averages
+      const depts = ['Computer Science', 'Data Science', 'Electronics & Comm', 'Electrical Eng', 'Mechanical Eng'];
+      const deptAverages = depts.map(dept => {
+        let deptStudents = studentsData.filter(s => s.dept === dept);
+        if (deptStudents.length === 0) return 100;
+        let sum = deptStudents.reduce((acc, s) => acc + calculateStudentStats(s).percentage, 0);
+        return Math.round(sum / deptStudents.length);
+      });
+
+      if (deptChartInstance) {
+        deptChartInstance.destroy();
+      }
+
+      deptChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['CSE', 'Data Science', 'ECE', 'EEE', 'Mechanical'],
+          datasets: [{
+            label: 'Avg Attendance %',
+            data: deptAverages,
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.7)',
+              'rgba(16, 185, 129, 0.7)',
+              'rgba(245, 158, 11, 0.7)',
+              'rgba(139, 92, 246, 0.7)',
+              'rgba(236, 72, 153, 0.7)'
+            ],
+            borderColor: [
+              '#3b82f6',
+              '#10b981',
+              '#f59e0b',
+              '#8b5cf6',
+              '#ec4899'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { color: '#94a3b8' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            x: {
+              ticks: { color: '#94a3b8' },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function renderActivityLog() {
+      const feed = document.getElementById('activity-feed');
+      if (!feed) return;
+
+      feed.innerHTML = `
+        <div class="flex items-start space-x-3 text-xs">
+          <div class="w-2 h-2 rounded-full bg-blue-500 mt-1.5"></div>
+          <div>
+            <p class="font-semibold">CSE-5A Session Log Saved</p>
+            <p class="theme-text-muted text-[11px]">22 records logged for Database Systems</p>
+          </div>
+        </div>
+        <div class="flex items-start space-x-3 text-xs">
+          <div class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></div>
+          <div>
+            <p class="font-semibold">Local Vault Auto-Synced</p>
+            <p class="theme-text-muted text-[11px]">All student history up to date</p>
+          </div>
+        </div>
+        <div class="flex items-start space-x-3 text-xs">
+          <div class="w-2 h-2 rounded-full bg-amber-500 mt-1.5"></div>
+          <div>
+            <p class="font-semibold">Defaulter Scan Complete</p>
+            <p class="theme-text-muted text-[11px]">System flagged students below 75% threshold</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMarkList() {
+      const container = document.getElementById('mark-list-container');
+      if (!container) return;
+
+      const dept = document.getElementById('filter-mark-dept').value;
+      const sem = document.getElementById('filter-mark-sem').value;
+      const sec = document.getElementById('filter-mark-sec').value;
+
+      // Filter active students
+      let filtered = studentsData.filter(s => {
+        if (dept !== 'ALL' && s.dept !== dept) return false;
+        if (sem !== 'ALL' && s.sem !== sem) return false;
+        if (sec !== 'ALL' && s.sec !== sec) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12 theme-text-muted">
+            <i class="fa-solid fa-user-slash text-3xl mb-2"></i>
+            <p>No students found matching selected filters.</p>
+          </div>
+        `;
+        updateMarkingCounters(0, 0, 0, 0, 0);
+        return;
+      }
+
+      container.innerHTML = filtered.map(student => {
+        let status = currentMarkingSession[student.id] || 'Present';
+        
+        return `
+          <div class="theme-card border rounded-2xl p-4 shadow-sm hover:border-blue-500/50 transition flex flex-col justify-between">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">${student.roll}</span>
+                <h4 class="font-bold text-sm mt-1">${student.name}</h4>
+                <p class="text-[11px] theme-text-muted">${student.dept} • ${student.sec}</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-bold ${calculateStudentStats(student).percentage < 75 ? 'text-red-400' : 'text-emerald-400'}">
+                  ${calculateStudentStats(student).percentage}%
+                </span>
+                <p class="text-[10px] theme-text-muted">Overall</p>
+              </div>
+            </div>
+
+            <!-- Status Selector Buttons -->
+            <div class="grid grid-cols-4 gap-1 mt-4 pt-3 border-t theme-border">
+              <button onclick="setStudentStatus('${student.id}', 'Present')" class="py-1.5 rounded-lg font-bold text-xs transition ${status === 'Present' ? 'bg-emerald-600 text-white shadow-md' : 'bg-black/20 text-emerald-400 hover:bg-emerald-500/20'}">
+                P
+              </button>
+              <button onclick="setStudentStatus('${student.id}', 'Absent')" class="py-1.5 rounded-lg font-bold text-xs transition ${status === 'Absent' ? 'bg-red-600 text-white shadow-md' : 'bg-black/20 text-red-400 hover:bg-red-500/20'}">
+                A
+              </button>
+              <button onclick="setStudentStatus('${student.id}', 'Late')" class="py-1.5 rounded-lg font-bold text-xs transition ${status === 'Late' ? 'bg-amber-600 text-white shadow-md' : 'bg-black/20 text-amber-400 hover:bg-amber-500/20'}">
+                L
+              </button>
+              <button onclick="setStudentStatus('${student.id}', 'Excused')" class="py-1.5 rounded-lg font-bold text-xs transition ${status === 'Excused' ? 'bg-purple-600 text-white shadow-md' : 'bg-black/20 text-purple-400 hover:bg-purple-500/20'}">
+                E
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      recalculateSessionCounters(filtered);
+    }
+
+    function setStudentStatus(studentId, status) {
+      currentMarkingSession[studentId] = status;
+      renderMarkList();
+    }
+
+    function markAllStatus(status) {
+      const dept = document.getElementById('filter-mark-dept').value;
+      const sem = document.getElementById('filter-mark-sem').value;
+      const sec = document.getElementById('filter-mark-sec').value;
+
+      studentsData.forEach(s => {
+        if ((dept === 'ALL' || s.dept === dept) && (sem === 'ALL' || s.sem === sem) && (sec === 'ALL' || s.sec === sec)) {
+          currentMarkingSession[s.id] = status;
+        }
+      });
+      renderMarkList();
+      showToast(`Marked all displayed students as ${status}`, 'info');
+    }
+
+    function recalculateSessionCounters(filteredStudents) {
+      let present = 0, absent = 0, late = 0, excused = 0;
+      filteredStudents.forEach(s => {
+        let st = currentMarkingSession[s.id] || 'Present';
+        if (st === 'Present') present++;
+        else if (st === 'Absent') absent++;
+        else if (st === 'Late') late++;
+        else if (st === 'Excused') excused++;
+      });
+      updateMarkingCounters(filteredStudents.length, present, absent, late, excused);
+    }
+
+    function updateMarkingCounters(total, p, a, l, e) {
+      document.getElementById('mark-count-total').textContent = total;
+      document.getElementById('mark-count-present').textContent = p;
+      document.getElementById('mark-count-absent').textContent = a;
+      document.getElementById('mark-count-late').textContent = l;
+      document.getElementById('mark-count-excused').textContent = e;
+    }
+
+    function saveCurrentSessionAttendance() {
+      const date = document.getElementById('filter-mark-date').value || new Date().toISOString().split('T')[0];
+      const subject = document.getElementById('filter-mark-subject').value;
+
+      let savedCount = 0;
+      studentsData.forEach(student => {
+        let status = currentMarkingSession[student.id] || 'Present';
+        
+        // Remove existing record for same date & subject if exists
+        student.logs = student.logs.filter(l => !(l.date === date && l.subject === subject));
+        
+        // Push new record
+        student.logs.push({ date, subject, status });
+        savedCount++;
+      });
+
+      saveStudentsData();
+      updateDashboardKPIs();
+      showToast(`Saved attendance for ${savedCount} students on ${date}!`, 'success');
+    }
+
+    function renderRosterTable() {
+      const tbody = document.getElementById('roster-table-body');
+      if (!tbody) return;
+
+      const query = document.getElementById('roster-search')?.value.toLowerCase() || '';
+
+      let filtered = studentsData.filter(s => {
+        return s.name.toLowerCase().includes(query) || s.roll.toLowerCase().includes(query) || s.dept.toLowerCase().includes(query);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center theme-text-muted">No student records found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(student => {
+        let stats = calculateStudentStats(student);
+        let statusBadge = stats.percentage < 75 
+          ? `<span class="px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-bold text-[10px]">DEFAULTER (<75%)</span>`
+          : `<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">COMPLIANT</span>`;
+
+        return `
+          <tr class="theme-hover transition">
+            <td class="p-3 pl-5">
+              <p class="font-bold text-xs">${student.name}</p>
+              <p class="text-[10px] theme-text-muted font-mono">${student.roll}</p>
+            </td>
+            <td class="p-3">${student.dept}</td>
+            <td class="p-3">${student.sem} (${student.sec})</td>
+            <td class="p-3 font-bold ${stats.percentage < 75 ? 'text-red-400' : 'text-emerald-400'}">${stats.percentage}%</td>
+            <td class="p-3">${statusBadge}</td>
+            <td class="p-3 text-right pr-5 space-x-2">
+              <button onclick="viewStudentHistory('${student.id}')" class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs transition">
+                <i class="fa-solid fa-eye"></i> View Logs
+              </button>
+              <button onclick="deleteStudent('${student.id}')" class="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs transition">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAddStudentModal() {
+      document.getElementById('modal-add-student').classList.remove('hidden');
+    }
+
+    function closeAddStudentModal() {
+      document.getElementById('modal-add-student').classList.add('hidden');
+    }
+
+    function handleAddStudentSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-student-name').value;
+      const roll = document.getElementById('new-student-roll').value;
+      const dept = document.getElementById('new-student-dept').value;
+      const sem = document.getElementById('new-student-sem').value;
+      const sec = document.getElementById('new-student-sec').value;
+      const email = document.getElementById('new-student-email').value;
+
+      const newStudent = {
+        id: 'S' + (100 + studentsData.length + 1),
+        roll,
+        name,
+        dept,
+        sem,
+        sec,
+        email,
+        logs: []
+      };
+
+      studentsData.push(newStudent);
+      saveStudentsData();
+      closeAddStudentModal();
+      document.getElementById('form-add-student').reset();
+      
+      renderRosterTable();
+      updateDashboardKPIs();
+      showToast(`Student ${name} enrolled successfully!`, 'success');
+    }
+
+    function deleteStudent(id) {
+      studentsData = studentsData.filter(s => s.id !== id);
+      saveStudentsData();
+      renderRosterTable();
+      updateDashboardKPIs();
+      showToast('Student record deleted from database', 'info');
+    }
+
+    function viewStudentHistory(id) {
+      const student = studentsData.find(s => s.id === id);
+      if (!student) return;
+
+      const stats = calculateStudentStats(student);
+
+      document.getElementById('detail-avatar').textContent = student.name.charAt(0);
+      document.getElementById('detail-name').textContent = student.name;
+      document.getElementById('detail-sub').textContent = `${student.roll} • ${student.dept} (${student.sem})`;
+      document.getElementById('detail-pct').textContent = `${stats.percentage}%`;
+      document.getElementById('detail-attended').textContent = `${stats.attended} / ${stats.total}`;
+      
+      const statusEl = document.getElementById('detail-status');
+      if (stats.percentage < 75) {
+        statusEl.textContent = 'DEFAULTER';
+        statusEl.className = 'text-xs font-bold mt-1 text-red-400';
+      } else {
+        statusEl.textContent = 'GOOD COMPLIANCE';
+        statusEl.className = 'text-xs font-bold mt-1 text-emerald-400';
+      }
+
+      const tbody = document.getElementById('detail-history-tbody');
+      if (student.logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-center theme-text-muted">No historical class logs found.</td></tr>`;
+      } else {
+        tbody.innerHTML = student.logs.map(log => `
+          <tr class="theme-hover">
+            <td class="p-2 pl-3 font-mono">${log.date}</td>
+            <td class="p-2">${log.subject}</td>
+            <td class="p-2 font-bold ${log.status === 'Present' ? 'text-emerald-400' : log.status === 'Absent' ? 'text-red-400' : 'text-amber-400'}">${log.status}</td>
+          </tr>
+        `).join('');
+      }
+
+      document.getElementById('modal-student-detail').classList.remove('hidden');
+    }
+
+    function closeStudentDetailModal() {
+      document.getElementById('modal-student-detail').classList.add('hidden');
+    }
+
+    function renderDefaulterTable() {
+      const tbody = document.getElementById('defaulter-table-body');
+      if (!tbody) return;
+
+      let defaulters = studentsData.filter(s => calculateStudentStats(s).percentage < 75);
+
+      if (defaulters.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-2"></i>No defaulters found! All students maintain >= 75% attendance.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = defaulters.map(student => {
+        let stats = calculateStudentStats(student);
+        let shortfall = Math.ceil((0.75 * stats.total - stats.attended) / 0.25) || 1;
+
+        return `
+          <tr class="theme-hover">
+            <td class="p-3 pl-5 font-mono text-xs font-bold">${student.roll}</td>
+            <td class="p-3 font-bold">${student.name}</td>
+            <td class="p-3">${student.dept}</td>
+            <td class="p-3 text-blue-400 font-mono text-[11px]">${student.email}</td>
+            <td class="p-3 font-bold text-red-400">${stats.percentage}%</td>
+            <td class="p-3 text-right pr-5 text-amber-400 font-bold">+${shortfall} Sessions Required</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportDefaultersCSV() {
+      let defaulters = studentsData.filter(s => calculateStudentStats(s).percentage < 75);
+      if (defaulters.length === 0) {
+        showToast('No defaulter records to export', 'info');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,Roll Number,Name,Department,Semester,Email,Attendance Percentage\n";
+      defaulters.forEach(s => {
+        let stats = calculateStudentStats(s);
+        csvContent += `"${s.roll}","${s.name}","${s.dept}","${s.sem}","${s.email}","${stats.percentage}%"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Defaulter_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('Defaulter CSV Report generated and downloaded!', 'success');
+    }
+
+    function triggerParentAlerts() {
+      showToast('Simulated parent notification emails dispatched for all defaulters', 'warning');
+    }
+
+    function renderSubjectAnalytics() {
+      const ctx = document.getElementById('subjectChart');
+      if (!ctx) return;
+
+      const subjects = ['Data Structures & Algorithms', 'Database Systems', 'Machine Learning', 'Digital Signal Processing', 'Thermodynamics'];
+      const subjectAvgs = subjects.map(sub => {
+        let totalCount = 0;
+        let attendedCount = 0;
+
+        studentsData.forEach(s => {
+          s.logs.forEach(l => {
+            if (l.subject === sub) {
+              totalCount++;
+              if (l.status === 'Present' || l.status === 'Late') attendedCount++;
+            }
+          });
+        });
+
+        return totalCount > 0 ? Math.round((attendedCount / totalCount) * 100) : 85;
+      });
+
+      if (subjectChartInstance) {
+        subjectChartInstance.destroy();
+      }
+
+      subjectChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: subjects,
+          datasets: [{
+            data: subjectAvgs,
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+          }
+        }
+      });
+
+      // Render metrics list
+      const metricsList = document.getElementById('subject-metrics-list');
+      if (metricsList) {
+        metricsList.innerHTML = subjects.map((sub, i) => `
+          <div class="flex justify-between items-center p-2 rounded-xl bg-black/20 border theme-border">
+            <span class="font-medium text-xs">${sub}</span>
+            <span class="font-bold text-xs" style="color: ${['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'][i]}">${subjectAvgs[i]}% Avg</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function applyThemePreset(preset) {
+      activeTheme = preset;
+      document.documentElement.setAttribute('data-theme', preset);
+      
+      const select = document.getElementById('quick-theme-select');
+      if (select) select.value = preset;
+
+      showToast(`Applied Theme: ${preset.replace('-', ' ').toUpperCase()}`, 'info');
+    }
+
+    function applyCustomAccent(hex) {
+      document.documentElement.style.setProperty('--color-brand-500', hex);
+      document.documentElement.style.setProperty('--color-brand-600', hex);
+      document.getElementById('accent-hex').textContent = hex;
+      showToast(`Accent color updated to ${hex}`, 'info');
+    }
+
+    function resetToInitialDataset() {
+      studentsData = [...initialDataset];
+      saveStudentsData();
+      updateDashboardKPIs();
+      renderMarkList();
+      renderRosterTable();
+      renderDefaulterTable();
+      showToast('Database reset to original demo data', 'warning');
+    }
+
+    function clearLocalStorage() {
+      localStorage.removeItem('uni_attend_students');
+      studentsData = [];
+      updateDashboardKPIs();
+      renderMarkList();
+      renderRosterTable();
+      renderDefaulterTable();
+      showToast('Local database vault cleared', 'warning');
+    }
+
+    function handleGlobalSearch(query) {
+      const dropdown = document.getElementById('search-dropdown');
+      if (!query || query.trim() === '') {
+        dropdown.classList.add('hidden');
+        return;
+      }
+
+      const results = studentsData.filter(s => s.name.toLowerCase().includes(query.toLowerCase()) || s.roll.toLowerCase().includes(query.toLowerCase()));
+      
+      if (results.length === 0) {
+        dropdown.innerHTML = `<div class="p-2 text-xs theme-text-muted">No student matching "${query}"</div>`;
+      } else {
+        dropdown.innerHTML = results.slice(0, 5).map(s => `
+          <div onclick="viewStudentHistory('${s.id}'); document.getElementById('search-dropdown').classList.add('hidden');" class="p-2 rounded-lg theme-hover cursor-pointer flex justify-between items-center text-xs">
+            <div>
+              <p class="font-bold">${s.name}</p>
+              <p class="text-[10px] theme-text-muted font-mono">${s.roll}</p>
+            </div>
+            <span class="text-blue-400 text-[10px] font-bold">${s.dept}</span>
+          </div>
+        `).join('');
+      }
+
+      dropdown.classList.remove('hidden');
+    }
+
+    function toggleNotifications() {
+      const notif = document.getElementById('notif-dropdown');
+      notif.classList.toggle('hidden');
+    }
+
+    function clearNotifs() {
+      document.getElementById('notif-list').innerHTML = `<p class="p-2 text-xs theme-text-muted">No new alerts</p>`;
+      document.getElementById('notif-badge').classList.add('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      
+      let icon = 'fa-circle-info';
+      let borderCol = 'border-blue-500/30 bg-blue-950/90 text-blue-200';
+      
+      if (type === 'success') {
+        icon = 'fa-circle-check';
+        borderCol = 'border-emerald-500/30 bg-emerald-950/90 text-emerald-200';
+      } else if (type === 'warning') {
+        icon = 'fa-triangle-exclamation';
+        borderCol = 'border-amber-500/30 bg-amber-950/90 text-amber-200';
+      }
+
+      toast.className = `flex items-center space-x-3 px-4 py-3 rounded-xl border ${borderCol} shadow-2xl backdrop-blur-md text-xs font-medium transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      // Animate in
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      // Dismiss after 3.5 seconds
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

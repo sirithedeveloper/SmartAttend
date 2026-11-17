@@ -11,3 +11,6 @@
 .button{
   color: blue;
 }
+.list{
+  list-style-type: square;
+}
